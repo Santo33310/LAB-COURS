@@ -1,0 +1,50 @@
+RAIDZ	TrueNAS utilise l’implémentation OpenZFS de RAID. OpenZFS implémente un RAID logiciel conçu pour surmonter certaines des limitations du RAID matériel, telles que le trou d’écriture et la corruption des données qui peuvent se produire avec la mise en cache des cartes RAID matérielles. OpenZFS fournit trois niveaux de redondance : RAIDZ1, RAIDZ2 et RAIDZ3. RAIDZ utilise la parité distribuée pour s’assurer qu’aucun disque ne contient toutes les données de parité. OpenZFS fournit également des miroirs entrelacés (RAID-10). Lorsque le zpool est composé de vdevs dans une configuration RAID-10, vous pouvez perdre tous les disques sauf un dans chaque vdev sans perdre le zpool.
+RAIDZ1	Fournit une protection contre la perte d’un seul disque. Similaire à RAID 5. En cas de défaillance de plus d’un disque par vdev, les données du zpool sont perdues.
+RAIDZ2	Fournit une protection contre la perte de deux disques. Similaire à RAID 6. Si plus de deux disques par vdev tombent en panne, les données du zpool sont perdues.
+RAIDZ3	Fournit une triple protection contre la perte de disque. Si plus de trois disques par vdev tombent en panne, les données du zpool sont perdues.
+
+------------
+
+Introduction à TrueNAS :
+différentes configurations RAID :
+
+RAID 0 : Striping sans redondance. Améliore les performances mais aucun tolérance de panne.
+RAID 1 : Miroir. Duplication des données sur deux disques pour une redondance maximale.
+RAID 5 : Striping avec parité distribuée. Bon équilibre entre performance et redondance avec un disque de parité réparti sur tous les disques.
+RAID 6 : Comme RAID 5 mais avec double parité pour une meilleure tolérance aux pannes.
+RAID 10 : Combinaison de RAID 1 et RAID 0. Offre à la fois redondance et performances.
+Avantages et inconvénients :
+
+RAID 1 : Avantages : meilleure tolérance aux pannes, faible temps de reconstruction. Inconvénients : utilisation inefficace de l'espace disque (50% seulement).
+RAID 5 : Avantages : bonne combinaison de performance et de redondance, espace disque efficace. Inconvénients : temps de reconstruction long en cas de panne de disque.
+RAID 6 : Avantages : tolérance aux pannes élevée même en cas de double défaillance de disque. Inconvénients : plus lent en écriture par rapport au RAID 5.
+RAID 10 : Avantages : excellente performance en lecture/écriture, bonne tolérance aux pannes. Inconvénients : coût élevé en termes d'espace disque (50%).
+Configuration choisie :
+
+Pour la mise en place du système de sauvegarde, nous choisissons la configuration RAID 1. Cette configuration offre une redondance complète des données, ce qui signifie que même en cas de défaillance d'un disque, les données restent accessibles et ne sont pas perdues. De plus, la reconstruction du RAID 1 est généralement plus rapide que celle des autres niveaux de RAID, ce qui réduit le temps d'indisponibilité en cas de panne.
+---------------
+sudo apt update
+sudo apt install nfs-common
+sudo mount -t nfs -o user,username=faust,password=admin 192.168.210.135:/mnt/Apachesync/SantoNAS/faust /mnt/truenas_share
+Nous utilisons la commande `mount -t nfs -o defaults 192.168.210.135:/mnt/Apachesync/SantoNAS/santo /mnt/truenas_share` pour monter un partage NFS sur notre système de fichiers local avec des options par défaut.
+
+Voici une version corrigée et reformulée :
+
+"Nous utiliserons le point de montage `/mnt/truenas-share` sur le serveur client pour synchroniser avec le TrueNAS. Plus précisément, nous envisageons de sauvegarder nos données à l'aide d'un script et de les stocker dans `/mnt/truenas-share`, partagé sur nos serveurs TrueNAS. Le script de sauvegarde sera programmé pour s'exécuter toutes les 2 minutes dans notre cas, mais nous avons la possibilité de le configurer selon nos besoins.
+
+En choisissant ce point de montage sur le serveur client, nous assurons une accessibilité aisée à notre espace de stockage sur le TrueNAS. Cette configuration permettra au script de sauvegarde d'accéder facilement aux données nécessaires et de les transférer vers notre système de stockage centralisé. Cette approche garantit une gestion efficace des sauvegardes, offrant la possibilité de centraliser et de sécuriser nos données critiques sur nos serveurs TrueNAS."
+-----------------
+config fichier etc/fstab
+-----
+rsync -av --delete -e ssh /mnt/Apachesync/SantoNAS/ santo@192.168.210.135:/mnt/Apachesync/SantoNAS/
+
+
+mkdir Script
+cd Script/
+ nano sauvegarde_apache.sh
+chmod +x sauvegarde_apache.sh
+./sauvegarde_apache.sh #lancer le script
+
+sudo crontab -e
+
+Dans cette partie, nous devons configurer un serveur Apache virtualisé pour tester la migration d'un applicatif de PHP 7.4 vers PHP 8.2 sur Debian 10. Pour ce faire, nous créons deux sites web qui fonctionneront chacun sous une version différente de PHP : l'un sous PHP 7.4 et l'autre sous PHP 8.2.

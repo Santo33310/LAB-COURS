@@ -1,0 +1,44 @@
+totem {
+    version: 2
+    secauth: on
+    cluster_name: cluster-ha
+    config_version: 3
+    ip_version: ipv4
+
+    interface {
+        ringnumber: 0
+        bindnetaddr: 10.17.61.26
+    }
+}
+
+logging {
+    to_stderr: yes
+    to_logfile: yes
+    logfile: /var/log/corosync/corosync.log
+    to_syslog: yes
+    debug: off
+
+    logger_subsys {
+        subsys: QUORUM
+        debug: off
+    }
+}
+
+nodelist {
+    node {
+        nodeid: 1
+        name: nextcloud-master
+        ring0_addr: 10.17.61.26
+        quorum_votes: 1
+    }
+    node {
+        nodeid: 2
+        name: nextcloud-slave
+        ring0_addr: 10.17.61.4
+        quorum_votes: 1
+    }
+}
+
+quorum {
+    provider: corosync_votequorum
+}
